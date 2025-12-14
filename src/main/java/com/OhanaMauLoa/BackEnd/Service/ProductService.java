@@ -6,6 +6,7 @@ import com.OhanaMauLoa.BackEnd.Utilities.StringUtils;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Sort;
 
 @Service
 public class ProductService {
@@ -27,17 +28,28 @@ public class ProductService {
     }
     return productOptional.get();
   }
-  public List<Product> findAllProducts(String name, String category){
-    if (!name.isEmpty() && !category.isEmpty()){
-      return this.productRepository.findByNameContainingIgnoreCaseAndCategoryIgnoreCase(name, category);
+  public List<Product> findAllProducts(String name, String category, String priceOrder) {
+
+    Sort sort = Sort.unsorted();
+
+    if ("asc".equalsIgnoreCase(priceOrder)) {
+      sort = Sort.by("price").ascending();
+    } else if ("desc".equalsIgnoreCase(priceOrder)) {
+      sort = Sort.by("price").descending();
     }
-    if (!name.isEmpty()){
-      return this.productRepository.findByNameContainingIgnoreCase(name);
+    if (!name.isEmpty() && !category.isEmpty()) {
+      return productRepository
+          .findByNameContainingIgnoreCaseAndCategoryIgnoreCase(name, category, sort);
     }
-    if (!category.isEmpty()){
-      return this.productRepository.findByCategoryContainingIgnoreCase(category);
+    if (!name.isEmpty()) {
+      return productRepository
+          .findByNameContainingIgnoreCase(name, sort);
     }
-    return this.productRepository.findAll();
+    if (!category.isEmpty()) {
+      return productRepository
+          .findByCategoryContainingIgnoreCase(category, sort);
+    }
+    return productRepository.findAll(sort);
   }
   public Product editProductById(Long id, Product dataToEdit){
     Product product = this.getProductById(id);
